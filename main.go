@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 var home string
@@ -13,6 +14,7 @@ func main() {
 
 	var err error
 	var startPath string
+	var outputOption string
 
 	home = os.Getenv("HOME")
 	vaultToken, err = readFile(fmt.Sprintf("%s/.vault-token", home))
@@ -22,27 +24,21 @@ func main() {
 	}
 
 	// TODO: Add "command" processing
-	// [ ] LIST - List all the KEYS at a KeyPath
-	// [ ] LISTALL - List all the KEYS starting at a KeyPath
-	// [ ] GET - Get the Value of a unique Key
-	// [ ] GETALL - Get the Values of all the unique Keys starting at a KeyPath
-	// Examples:
-	//  - vault-tree list         # lists keys contained in root
-	//  - vault-tree list azure   # lists keys contained at azure/
-	//  - vault-tree listall      # lists all keys starting at root
-	//  - vault-tree get          # return the value for a specific key
-	//  - vault-tree getall       # return the value for all keys starting at root
 	// TODO: Add --options
-	// [ ] --output=json|yaml - Return the data in a specific format.
 
-	if len(os.Args) > 1 {
-		startPath = os.Args[1]
-	} else {
-		startPath = ""
+	startPath = ""
+	outputOption = "json"
+	for arg := 1; arg < len(os.Args); arg++ {
+		if strings.HasPrefix(os.Args[arg], "-o=") {
+			outputOption = strings.ToLower(strings.TrimPrefix(os.Args[arg], "-o="))
+		}
+		if arg > 0 && !strings.HasPrefix(os.Args[arg], "-") {
+			startPath = os.Args[arg]
+		}
 	}
+
 	allkeys := getKeyPaths(startPath)
 
-	for key := range allkeys {
-		fmt.Println(allkeys[key])
-	}
+	treePrint(allkeys, outputOption)
+
 }
